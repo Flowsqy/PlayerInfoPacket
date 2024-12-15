@@ -39,7 +39,7 @@ public class PlayerInfoPacket {
         }
     }
 
-    private void sendPackets(@NotNull Iterable<Packet<?>> packets, @NotNull Iterable<Player> receivers) {
+    private void sendPackets(@NotNull Iterable<Packet<?>> packets, @NotNull Iterable<? extends Player> receivers) {
         for (var receiver : receivers) {
             final ServerGamePacketListenerImpl connection = ((CraftPlayer) receiver).getHandle().connection;
             for (var packet : packets) {
@@ -48,7 +48,7 @@ public class PlayerInfoPacket {
         }
     }
 
-    public void sendNewPlayers(@NotNull Iterable<PlayerInfo> playerInfos, @NotNull Iterable<Player> receivers) {
+    public void sendNewPlayers(@NotNull Iterable<PlayerInfo> playerInfos, @NotNull Iterable<? extends Player> receivers) {
         final List<Packet<?>> packets = new LinkedList<>();
         for (var playerInfo : playerInfos) {
             final var actions = EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED);
@@ -64,7 +64,7 @@ public class PlayerInfoPacket {
         sendPackets(packets, receivers);
     }
 
-    public void removePlayers(@NotNull List<UUID> profileIds, @NotNull Iterable<Player> receivers) {
+    public void removePlayers(@NotNull List<UUID> profileIds, @NotNull Iterable<? extends Player> receivers) {
         final var packet = new ClientboundPlayerInfoRemovePacket(profileIds);
         sendPackets(Collections.singleton(packet), receivers);
     }
