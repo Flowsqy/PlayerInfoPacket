@@ -60,6 +60,7 @@ public class PlayerInfoPacket {
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException(e);
             }
+            packets.add(packet);
         }
         sendPackets(packets, receivers);
     }
