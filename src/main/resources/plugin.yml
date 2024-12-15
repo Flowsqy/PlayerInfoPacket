@@ -1,0 +1,5 @@
+name: "PlayerInfoPacket"
+author: "Flowsqy"
+version: "${project.version}"
+main: "fr.flowsqy.playerinfopacket.PlayerInfoPacket"
+api-version: "1.13"
