@@ -48,24 +48,40 @@ public class PlayerInfoPacket {
         }
     }
 
-    public void sendNewPlayers(@NotNull Iterable<PlayerInfo> playerInfos, @NotNull Iterable<? extends Player> receivers) {
-        final List<Packet<?>> packets = new LinkedList<>();
-        for (var playerInfo : playerInfos) {
-            final var actions = EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED);
-            final var profile = playerInfo.profile();
-            final var entry = new ClientboundPlayerInfoUpdatePacket.Entry(profile.id(), new GameProfile(profile.id(), profile.name()), playerInfo.listed(), 0, null, CraftChatMessage.fromStringOrNull(playerInfo.displayName()), null);
-            final var packet = new ClientboundPlayerInfoUpdatePacket(actions, Collections.emptyList());
-            try {
-                ENTRIES_FIELD.set(packet, List.of(entry));
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException(e);
-            }
-            packets.add(packet);
+    private void setEntries(@NotNull ClientboundPlayerInfoUpdatePacket packet, @NotNull List<ClientboundPlayerInfoUpdatePacket.Entry> entries) {
+        try {
+            ENTRIES_FIELD.set(packet, entries);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
         }
-        sendPackets(packets, receivers);
     }
 
-    public void removePlayers(@NotNull List<UUID> profileIds, @NotNull Iterable<? extends Player> receivers) {
+    public void sendNewPlayers(@NotNull Iterable<PlayerInfo> playerInfos, @NotNull Iterable<? extends Player> receivers) {
+        final var actions = EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED, ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME);
+        final List<ClientboundPlayerInfoUpdatePacket.Entry> entries = new LinkedList<>();
+        final var packet = new ClientboundPlayerInfoUpdatePacket(actions, Collections.emptyList());
+        for (var playerInfo : playerInfos) {
+            final var profile = playerInfo.profile();
+            final var entry = new ClientboundPlayerInfoUpdatePacket.Entry(profile.id(), new GameProfile(profile.id(), profile.name()), playerInfo.listed(), 0, null, CraftChatMessage.fromStringOrNull(playerInfo.displayName()), null);
+            entries.add(entry);
+        }
+        setEntries(packet, entries);
+        sendPackets(Collections.singleton(packet), receivers);
+    }
+
+    public void sendUpdatePlayerNames(@NotNull Iterable<PlayerInfo> playerInfos, @NotNull Iterable<? extends Player> receivers) {
+        final var actions = EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME);
+        final ClientboundPlayerInfoUpdatePacket packet = new ClientboundPlayerInfoUpdatePacket(actions, Collections.emptyList());
+        final List<ClientboundPlayerInfoUpdatePacket.Entry> entries = new LinkedList<>();
+        for (var playerInfo : playerInfos) {
+            var entry = new ClientboundPlayerInfoUpdatePacket.Entry(playerInfo.profile().id(), null, false, 0, null, CraftChatMessage.fromStringOrNull(playerInfo.displayName()), null);
+            entries.add(entry);
+        }
+        setEntries(packet, entries);
+        sendPackets(Collections.singleton(packet), receivers);
+    }
+
+    public void sendRemovePlayers(@NotNull List<UUID> profileIds, @NotNull Iterable<? extends Player> receivers) {
         final var packet = new ClientboundPlayerInfoRemovePacket(profileIds);
         sendPackets(Collections.singleton(packet), receivers);
     }
